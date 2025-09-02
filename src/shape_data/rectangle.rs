@@ -19,6 +19,7 @@ impl Rectangle {
         Rectangle::new(position - scale / 2.0, position + scale / 2.0)
     }
 
+    #[allow(dead_code)]
     pub fn position(&self) -> Vector2 {
         Vector2 {
             x: (self.top_left.x + self.bottom_right.x) / 2.0,
