@@ -25,13 +25,13 @@ pub fn draw_outlined_rect(rect: &Rectangle, outline_width: f64, inner_color: Col
 
 pub fn draw_player(main_scene: &Scene, player_id: ObjectId) {
     let player: &Player = main_scene.players.get(&player_id).unwrap();
-    let transform: &Transform = main_scene.transforms.get(&player_id).unwrap();
+    let transform: &Transform = main_scene.global_transforms.get(&player_id).unwrap();
     draw_outlined_rect(&transform.transform_rect(&player.shape), Player::OUTLINE_SIZE, RED, BLACK);
 }
 
 pub fn draw_anchor(main_scene: &Scene, anchor_id: ObjectId) {
     let anchor = main_scene.anchors.get(&anchor_id).unwrap();
-    let transform = main_scene.transforms.get(&anchor_id).unwrap();
+    let transform = main_scene.global_transforms.get(&anchor_id).unwrap();
     draw_rect_shape(&transform.transform_rect(&anchor.shape), PURPLE);
 }
 

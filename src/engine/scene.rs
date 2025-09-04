@@ -16,7 +16,8 @@ let hierarchy = scene.hierarchies.get(&player_id).unwrap();
 pub struct Scene {
     pub players: HashMap<ObjectId, Player>,
     pub anchors: HashMap<ObjectId, Anchor>,
-    pub transforms: HashMap<ObjectId, Transform>,
+    pub local_transforms: HashMap<ObjectId, Transform>,
+    pub global_transforms: HashMap<ObjectId, Transform>,
     pub hierarchies: HashMap<ObjectId, Hierarchy>,
 }
 
@@ -25,7 +26,8 @@ impl Scene {
         Self {
             players: HashMap::new(),
             anchors: HashMap::new(),
-            transforms: HashMap::new(),
+            local_transforms: HashMap::new(),
+            global_transforms: HashMap::new(),
             hierarchies: HashMap::new(),
         }
     }
@@ -41,18 +43,24 @@ impl Scene {
     }
 
     pub fn apply_parent_transform(&mut self, object_id: ObjectId) {
-        let transform = self.transforms.get(&object_id).unwrap();
+        let transform = self.local_transforms.get(&object_id).unwrap();
         let hierarchy = self.hierarchies.get(&object_id).unwrap();
 
         let Some(parent_id) = hierarchy.parent else {
             return
         };
-        let parent_transform = self.transforms.get(&parent_id).unwrap();
+        let parent_transform = self.global_transforms.get(&parent_id).unwrap();
         
         // TODO: Make the transforms HashMap only store the local transforms of the objects.
         // The global transform (with the parents' transforms applied) should be stored elsewhere.
         // I'm not sure how this should be tackled yet. 
-        self.transforms.insert(object_id, transform.apply_transform(*parent_transform));
+        self.global_transforms.insert(object_id, transform.apply_transform(*parent_transform));
+        
+        // This works but it feels a little hacky
+        // (I only did clone() because the compiler suggested that)
+        for child_id in hierarchy.children.clone() {
+            self.apply_parent_transform(child_id);
+        }
     }
 
     pub fn add_player(&mut self, position: Vector2) -> ObjectId {
@@ -62,7 +70,8 @@ impl Scene {
         let hierarchy = Hierarchy { parent: None, children: vec![] };
 
         self.players.insert(player_id, player);
-        self.transforms.insert(player_id, transform);
+        self.local_transforms.insert(player_id, transform);
+        self.global_transforms.insert(player_id, transform);
         self.hierarchies.insert(player_id, hierarchy);
         player_id
     }
@@ -75,7 +84,8 @@ impl Scene {
         let hierarchy = Hierarchy { parent: None, children: vec![] };
 
         self.anchors.insert(anchor_id, anchor);
-        self.transforms.insert(anchor_id, transform);
+        self.local_transforms.insert(anchor_id, transform);
+        self.global_transforms.insert(anchor_id, transform);
         self.hierarchies.insert(anchor_id, hierarchy);
 
         anchor_id
