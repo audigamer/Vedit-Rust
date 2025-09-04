@@ -34,7 +34,6 @@ impl Rectangle {
         }
     }
 
-    #[allow(dead_code)]
     pub fn translate(&mut self, offset: Vector2) {
         self.top_left += offset;
         self.bottom_right += offset;
