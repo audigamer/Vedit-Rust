@@ -51,13 +51,16 @@ impl Scene {
         };
         let parent_transform = self.global_transforms.get(&parent_id).unwrap();
         
-        // TODO: Make the transforms HashMap only store the local transforms of the objects.
-        // The global transform (with the parents' transforms applied) should be stored elsewhere.
-        // I'm not sure how this should be tackled yet. 
         self.global_transforms.insert(object_id, transform.apply_transform(*parent_transform));
         
         // This works but it feels a little hacky
         // (I only did clone() because the compiler suggested that)
+        self.update_child_transforms(object_id);
+    }
+
+    pub fn update_child_transforms(&mut self, object_id: ObjectId) {
+        let hierarchy = self.hierarchies.get(&object_id).unwrap();
+
         for child_id in hierarchy.children.clone() {
             self.apply_parent_transform(child_id);
         }
