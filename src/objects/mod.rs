@@ -1,6 +1,8 @@
+pub mod game_object;
 pub mod player;
 pub mod components;
 pub mod anchor;
+pub mod enemy;
 
 pub use player::Player;
 

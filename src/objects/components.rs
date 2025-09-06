@@ -2,7 +2,7 @@
 
 
 use vector2::Vector2;
-use crate::{objects::ObjectId, shape_data::rectangle::Rectangle};
+use crate::{objects::ObjectId, shape_data::{circle::Circle, rectangle::Rectangle}};
 
 /* 
 Stores information about a an object's linear transform. The object's hierarchy
@@ -43,6 +43,13 @@ impl Transform {
         Rectangle {
             top_left: rect.top_left + self.position,
             bottom_right: rect.bottom_right + self.position,
+        }
+    }
+
+    pub fn transform_circle(&self, circle: &Circle) -> Circle {
+        Circle {
+            center: circle.center + self.position,
+            radius: circle.radius,
         }
     }
 }

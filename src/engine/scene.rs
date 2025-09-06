@@ -1,8 +1,8 @@
-use std::collections::HashMap;
+use std::{collections::HashMap};
 use uid::Id;
 use vector2::Vector2;
 
-use crate::objects::{anchor::Anchor, components::*, player::Player, ObjectId};
+use crate::objects::{anchor::Anchor, components::*, enemy::Enemy, game_object::GameObject, player::Player, ObjectId};
 
 /*
 Scenes are containers for objects and components, stored in a HashMap with
@@ -16,6 +16,7 @@ let hierarchy = scene.hierarchies.get(&player_id).unwrap();
 pub struct Scene {
     pub players: HashMap<ObjectId, Player>,
     pub anchors: HashMap<ObjectId, Anchor>,
+    pub enemies: HashMap<ObjectId, Enemy>,
     pub local_transforms: HashMap<ObjectId, Transform>,
     pub global_transforms: HashMap<ObjectId, Transform>,
     pub hierarchies: HashMap<ObjectId, Hierarchy>,
@@ -26,6 +27,7 @@ impl Scene {
         Self {
             players: HashMap::new(),
             anchors: HashMap::new(),
+            enemies: HashMap::new(),
             local_transforms: HashMap::new(),
             global_transforms: HashMap::new(),
             hierarchies: HashMap::new(),
@@ -66,31 +68,43 @@ impl Scene {
         }
     }
 
-    pub fn add_player(&mut self, position: Vector2) -> ObjectId {
-        let player_id: ObjectId = Id::new();
-        let player = Player::new();
+    fn add_object<T: GameObject>(
+        map: &mut HashMap<ObjectId, T>,
+        position: Vector2,
+        local_transforms: &mut HashMap<ObjectId, Transform>,
+        global_transforms: &mut HashMap<ObjectId, Transform>,
+        hierarchies: &mut HashMap<ObjectId, Hierarchy>
+    ) -> ObjectId {
+        let id: ObjectId = Id::new();
+        let object: T = GameObject::new();
         let transform: Transform = Transform::at_position(position);
-        let hierarchy = Hierarchy { parent: None, children: vec![] };
+        let hierarchy: Hierarchy = Hierarchy::empty();
 
-        self.players.insert(player_id, player);
-        self.local_transforms.insert(player_id, transform);
-        self.global_transforms.insert(player_id, transform);
-        self.hierarchies.insert(player_id, hierarchy);
-        player_id
+        map.insert(id, object);
+        local_transforms.insert(id, transform);
+        global_transforms.insert(id, transform);
+        hierarchies.insert(id, hierarchy);
+        id
+    }
+
+    pub fn add_player(&mut self, position: Vector2) -> ObjectId {
+        Self::add_object::<Player>(
+            &mut self.players, position, &mut self.local_transforms,
+            &mut self.global_transforms, &mut self.hierarchies
+        )
     }
 
     pub fn add_anchor(&mut self, position: Vector2) -> ObjectId {
-        let anchor_id: ObjectId = Id::new();
+        Self::add_object::<Anchor>(
+            &mut self.anchors, position, &mut self.local_transforms,
+            &mut self.global_transforms, &mut self.hierarchies
+        )
+    }
 
-        let anchor = Anchor::new();
-        let transform = Transform::at_position(position);
-        let hierarchy = Hierarchy { parent: None, children: vec![] };
-
-        self.anchors.insert(anchor_id, anchor);
-        self.local_transforms.insert(anchor_id, transform);
-        self.global_transforms.insert(anchor_id, transform);
-        self.hierarchies.insert(anchor_id, hierarchy);
-
-        anchor_id
+    pub fn add_enemy(&mut self, position: Vector2) -> ObjectId {
+        Self::add_object::<Enemy>(
+            &mut self.enemies, position, &mut self.local_transforms,
+            &mut self.global_transforms, &mut self.hierarchies
+        )
     }
 }
