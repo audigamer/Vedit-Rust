@@ -7,7 +7,7 @@ pub struct Player {
 }
 
 impl Player {
-    pub const PLAYER_SCALE: f64 = 48.0;
+    pub const PLAYER_SCALE: f64 = 42.0;
     pub const DEFAULT_SPEED: f64 = 200.0;
     pub const OUTLINE_SIZE: f64 = 12.0;
 

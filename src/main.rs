@@ -13,10 +13,10 @@ async fn main() {
     let player_id = main_scene.add_player(Vector2::ZERO);
 
     let enemy_positions = vec![
-        Vector2::new(400.0, 100.0),
-        Vector2::new(50.0, 0.0),
-        Vector2::new(0.0, 50.0),
-        Vector2::new(50.0, 50.0)
+        Vector2::new(480.0, 96.0),
+        Vector2::new(48.0, 0.0),
+        Vector2::new(0.0, 48.0),
+        Vector2::new(48.0, 48.0)
         ];
 
     let enemy_ids: Vec<ObjectId> = enemy_positions.iter()
@@ -27,19 +27,18 @@ async fn main() {
     main_scene.append_child(enemy_ids[1], enemy_ids[2]);
     main_scene.append_child(enemy_ids[2], enemy_ids[3]);
     
-    set_default_filter_mode(FilterMode::Nearest);
     loop {
         update_player(&mut main_scene, player_id);
 
         // TODO: Make updating transform work in any order.
         // Right now, the child must be updated before the parent, or else the transforms will break.
-        update_transform(&mut main_scene, enemy_ids[1],
-            Vector2::UP * get_frame_time().into() * 25.0);
-        update_transform(&mut main_scene, enemy_ids[0],
-            Vector2::RIGHT * get_frame_time().into() * 50.0);
+        // update_transform(&mut main_scene, enemy_ids[1],
+        //     Vector2::UP * get_frame_time().into() * 25.0);
+        // update_transform(&mut main_scene, enemy_ids[0],
+        //     Vector2::RIGHT * get_frame_time().into() * 50.0);
 
-
-        clear_background(LIGHTGRAY);
+        clear_background(BLACK);
+        draw_floor(32, 32);
         draw_player(&main_scene, player_id);
         draw_anchors(&main_scene);
         draw_enemies(&main_scene);
