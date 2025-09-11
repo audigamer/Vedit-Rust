@@ -5,7 +5,7 @@ mod engine;
 use macroquad::prelude::*;
 use vector2::Vector2;
 
-use crate::{engine::{draw::*, scene::Scene, update::{update_player, update_transform}}, objects::ObjectId};
+use crate::{engine::{draw::*, scene::Scene, update::{update_player}}, objects::ObjectId};
 
 #[macroquad::main("Example")]
 async fn main() {
@@ -16,7 +16,7 @@ async fn main() {
         Vector2::new(480.0, 96.0),
         Vector2::new(48.0, 0.0),
         Vector2::new(0.0, 48.0),
-        Vector2::new(48.0, 48.0)
+        Vector2::new(24.0, 24.0)
         ];
 
     let enemy_ids: Vec<ObjectId> = enemy_positions.iter()
@@ -24,8 +24,10 @@ async fn main() {
         .collect();
 
     main_scene.append_child(enemy_ids[0], enemy_ids[1]);
-    main_scene.append_child(enemy_ids[1], enemy_ids[2]);
-    main_scene.append_child(enemy_ids[2], enemy_ids[3]);
+    main_scene.append_child(enemy_ids[0], enemy_ids[2]);
+    main_scene.append_child(enemy_ids[1], enemy_ids[3]);
+
+    main_scene.initialize_transforms();
     
     loop {
         update_player(&mut main_scene, player_id);

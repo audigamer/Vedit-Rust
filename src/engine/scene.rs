@@ -1,4 +1,4 @@
-use std::{collections::HashMap};
+use std::collections::{HashMap, HashSet};
 use uid::Id;
 use vector2::Vector2;
 
@@ -12,60 +12,71 @@ to get the player's scene tree hierarchy, you do:
 
 let player_id: ObjectId = ...
 let hierarchy = scene.hierarchies.get(&player_id).unwrap();
+
+Scenes have their own ID, because they can have their own components like any
+other game object.
 */
 pub struct Scene {
+    pub id: ObjectId,
     pub players: HashMap<ObjectId, Player>,
     pub anchors: HashMap<ObjectId, Anchor>,
     pub enemies: HashMap<ObjectId, Enemy>,
     pub local_transforms: HashMap<ObjectId, Transform>,
     pub global_transforms: HashMap<ObjectId, Transform>,
-    pub hierarchies: HashMap<ObjectId, Hierarchy>,
+
+    // Game object relationships
+    pub parents: HashMap<ObjectId, ObjectId>,
+    pub children: HashMap<ObjectId, HashSet<ObjectId>>,
+    //pub hierarchies: HashMap<ObjectId, Hierarchy>,
 }
 
 impl Scene {
     pub fn new() -> Self {
+        let scene_id: ObjectId = Id::new();
+        // Add scene's children set
+        let children: HashMap<ObjectId, HashSet<ObjectId>> = 
+            HashMap::from([(scene_id, HashSet::new())]);
+
         Self {
+            id: scene_id,
             players: HashMap::new(),
             anchors: HashMap::new(),
             enemies: HashMap::new(),
             local_transforms: HashMap::new(),
             global_transforms: HashMap::new(),
-            hierarchies: HashMap::new(),
+            parents: HashMap::new(),
+            children
         }
     }
 
     pub fn append_child(&mut self, parent_id: ObjectId, child_id: ObjectId) {
-        let parent = self.hierarchies.get_mut(&parent_id).unwrap();
-        parent.children.push(child_id);
-
-        let child = self.hierarchies.get_mut(&child_id).unwrap();
-        child.parent = Some(parent_id);
-
-        self.apply_parent_transform(child_id);
-    }
-
-    pub fn apply_parent_transform(&mut self, object_id: ObjectId) {
-        let transform = self.local_transforms.get(&object_id).unwrap();
-        let hierarchy = self.hierarchies.get(&object_id).unwrap();
-
-        let Some(parent_id) = hierarchy.parent else {
-            return
-        };
-        let parent_transform = self.global_transforms.get(&parent_id).unwrap();
+        self.children.get_mut(&parent_id).unwrap().insert(child_id);
         
-        self.global_transforms.insert(object_id, transform.apply_transform(*parent_transform));
-        
-        // This works but it feels a little hacky
-        // (I only did clone() because the compiler suggested that)
-        self.update_child_transforms(object_id);
-    }
+        let old_parent_option: Option<ObjectId> = self.parents.insert(child_id, parent_id);
 
-    pub fn update_child_transforms(&mut self, object_id: ObjectId) {
-        let hierarchy = self.hierarchies.get(&object_id).unwrap();
-
-        for child_id in hierarchy.children.clone() {
-            self.apply_parent_transform(child_id);
+        if let Some(old_parent_id) = old_parent_option {
+            //let old_parent: &mut Hierarchy = self.hierarchies.get_mut(&old_parent_id).unwrap();
+            self.children.get_mut(&old_parent_id).unwrap().remove(&child_id);
         }
+    }
+
+    pub fn initialize_transforms(&mut self) {
+        let children: HashSet<ObjectId> = self.children.get(&self.id).unwrap().clone();
+        let default_transform: Transform = Transform::at_position(Vector2::ZERO);
+        self.recalculate_child_transforms(children, &default_transform);
+    }
+
+    fn recalculate_child_transforms(&mut self, children: HashSet<ObjectId>, parent_transform: &Transform) {
+        println!("{}", children.len());
+        for child_id in children {
+            let transform = self.local_transforms.get(&child_id).unwrap();
+            let new_transform = transform.apply_transform(*parent_transform);
+            self.global_transforms.insert(child_id, new_transform);
+            
+            let next_children: HashSet<ObjectId> = self.children.get(&child_id).unwrap().clone();
+            self.recalculate_child_transforms(next_children, &new_transform);
+        }
+        
     }
 
     fn add_object<T: GameObject>(
@@ -73,38 +84,41 @@ impl Scene {
         position: Vector2,
         local_transforms: &mut HashMap<ObjectId, Transform>,
         global_transforms: &mut HashMap<ObjectId, Transform>,
-        hierarchies: &mut HashMap<ObjectId, Hierarchy>
+        parents: &mut HashMap<ObjectId, ObjectId>,
+        children: &mut HashMap<ObjectId, HashSet<ObjectId>>,
+        scene_id: &ObjectId
     ) -> ObjectId {
         let id: ObjectId = Id::new();
         let object: T = GameObject::new();
         let transform: Transform = Transform::at_position(position);
-        let hierarchy: Hierarchy = Hierarchy::empty();
 
         map.insert(id, object);
         local_transforms.insert(id, transform);
         global_transforms.insert(id, transform);
-        hierarchies.insert(id, hierarchy);
+        parents.insert(id, *scene_id);
+        children.insert(id, HashSet::new());
+        children.get_mut(&scene_id).unwrap().insert(id);
         id
     }
 
     pub fn add_player(&mut self, position: Vector2) -> ObjectId {
         Self::add_object::<Player>(
             &mut self.players, position, &mut self.local_transforms,
-            &mut self.global_transforms, &mut self.hierarchies
+            &mut self.global_transforms, &mut self.parents, &mut self.children, &self.id
         )
     }
 
     pub fn add_anchor(&mut self, position: Vector2) -> ObjectId {
         Self::add_object::<Anchor>(
             &mut self.anchors, position, &mut self.local_transforms,
-            &mut self.global_transforms, &mut self.hierarchies
+            &mut self.global_transforms, &mut self.parents, &mut self.children, &self.id
         )
     }
 
     pub fn add_enemy(&mut self, position: Vector2) -> ObjectId {
         Self::add_object::<Enemy>(
             &mut self.enemies, position, &mut self.local_transforms,
-            &mut self.global_transforms, &mut self.hierarchies
+            &mut self.global_transforms, &mut self.parents, &mut self.children, &self.id
         )
     }
 }

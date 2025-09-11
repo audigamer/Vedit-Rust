@@ -1,8 +1,7 @@
 #![allow(dead_code)]
 
-
 use vector2::Vector2;
-use crate::{objects::ObjectId, shape_data::{circle::Circle, rectangle::Rectangle}};
+use crate::{shape_data::{circle::Circle, rectangle::Rectangle}};
 
 /* 
 Stores information about a an object's linear transform. The object's hierarchy
@@ -51,22 +50,5 @@ impl Transform {
             center: circle.center + self.position,
             radius: circle.radius,
         }
-    }
-}
-
-/*
-Stores information about the place of an object in the scene tree hierarchy.
-*/ 
-pub struct Hierarchy {
-    pub parent: Option<ObjectId>,
-    pub children: Vec<ObjectId>,
-}
-
-impl Hierarchy {
-    pub fn empty() -> Self {
-        Self { parent: None, children: vec![] }
-    }
-    pub fn with_parent(parent: ObjectId) -> Self {
-        Self { parent: Some(parent), children: vec![] }
     }
 }

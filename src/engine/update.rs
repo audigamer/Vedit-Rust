@@ -27,7 +27,4 @@ pub fn update_transform(main_scene: &mut Scene, id: ObjectId, offset: Vector2) {
     let transform: &Transform = main_scene.local_transforms.get(&id).unwrap();
     let new_transform = Transform::at_position(transform.position + offset);
     main_scene.local_transforms.insert(id, new_transform);
-    main_scene.global_transforms.insert(id, new_transform);
-
-    main_scene.update_child_transforms(id);
 }
