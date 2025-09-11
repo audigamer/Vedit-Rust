@@ -8,13 +8,15 @@ use crate::objects::{anchor::Anchor, components::*, enemy::Enemy, game_object::G
 Scenes are containers for objects and components, stored in a HashMap with
 ObjectId keys in ECS (entity component system) style. The components which
 an object needs are stored with the same ObjectId as the object. For example,
-to get the player's scene tree hierarchy, you do:
+to get the player's scene tree transform, you do:
 
+let scene: Scene = ...
 let player_id: ObjectId = ...
-let hierarchy = scene.hierarchies.get(&player_id).unwrap();
+let hierarchy = scene.global_transforms.get(&player_id).unwrap();
 
 Scenes have their own ID, because they can have their own components like any
-other game object.
+other game object. When creating a Scene, a set for its direct children gets
+added to the children HashMap.
 */
 pub struct Scene {
     pub id: ObjectId,
@@ -49,6 +51,8 @@ impl Scene {
         }
     }
 
+    // Adds the child ID to the parent ID's children list and removes it from
+    // the old parent's children list
     pub fn append_child(&mut self, parent_id: ObjectId, child_id: ObjectId) {
         self.children.get_mut(&parent_id).unwrap().insert(child_id);
         
@@ -60,6 +64,8 @@ impl Scene {
         }
     }
 
+    // Should be ran after each object's initial state (local transforms) gets loaded
+    // to initialize the global transforms.
     pub fn initialize_transforms(&mut self) {
         let children: HashSet<ObjectId> = self.children.get(&self.id).unwrap().clone();
         let default_transform: Transform = Transform::at_position(Vector2::ZERO);
@@ -79,6 +85,7 @@ impl Scene {
         
     }
 
+    // Helper function to remove repetition from the other add_<object> functions
     fn add_object<T: GameObject>(
         map: &mut HashMap<ObjectId, T>,
         position: Vector2,
