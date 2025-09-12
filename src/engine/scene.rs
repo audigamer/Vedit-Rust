@@ -2,8 +2,7 @@ use std::collections::{HashMap, HashSet};
 use uid::Id;
 use vector2::Vector2;
 
-use crate::objects::{anchor::Anchor, components::*, enemy::Enemy, game_object::GameObject, player::Player, ObjectId};
-
+use crate::objects::*;
 /*
 Scenes are containers for objects and components, stored in a HashMap with
 ObjectId keys in ECS (entity component system) style. The components which

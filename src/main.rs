@@ -1,11 +1,12 @@
 mod objects;
 mod shape_data;
 mod engine;
+mod game_loop;
 
 use macroquad::prelude::*;
 use vector2::Vector2;
 
-use crate::{engine::{draw::*, scene::Scene, update::{update_player}}, objects::ObjectId};
+use crate::{engine::*, game_loop::*, objects::ObjectId};
 
 #[macroquad::main("Example")]
 async fn main() {
@@ -39,23 +40,7 @@ async fn main() {
         // update_transform(&mut main_scene, enemy_ids[0],
         //     Vector2::RIGHT * get_frame_time().into() * 50.0);
 
-        clear_background(BLACK);
-        draw_floor(32, 32);
-        draw_player(&main_scene, player_id);
-        draw_anchors(&main_scene);
-        draw_enemies(&main_scene);
-        draw_fps();
+        render_scene(&main_scene, player_id);
         next_frame().await
-    }
-}
-
-fn draw_anchors(main_scene: &Scene) {
-    for (anchor_id, _) in &main_scene.anchors {
-        draw_anchor(main_scene, *anchor_id);
-    }
-}
-fn draw_enemies(main_scene: &Scene) {
-    for (enemy_id, _) in &main_scene.enemies {
-        draw_enemy(main_scene, *enemy_id);
     }
 }

@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use crate::shape_data::{circle::Circle, rectangle::Rectangle};
+use crate::shape_data::*;
 
 pub fn rect_rect(a: &Rectangle, b: &Rectangle) -> bool {
     let intersects_horizontally: bool = a.bottom_right.x > b.top_left.x &&

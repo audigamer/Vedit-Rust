@@ -1,7 +1,7 @@
 use macroquad::time::get_frame_time;
 use vector2::Vector2;
 
-use crate::{engine::{input::ActionMap, scene::Scene}, objects::{components::Transform, ObjectId, Player}};
+use crate::{engine::*, objects::{components::Transform, ObjectId, Player}};
 
 pub fn update_player(main_scene: &mut Scene, player_id: ObjectId) {
     let player: &Player = main_scene.players.get(&player_id).unwrap();
